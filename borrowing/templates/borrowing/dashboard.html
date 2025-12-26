@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Your LendGo Dashboard</h1>
+
+{% if has_active_loans or has_active_lends %}
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <div>
+        You currently have **{% if has_active_loans %}active loans{% endif %}{% if has_active_loans and has_active_lends %} and {% endif %}{% if has_active_lends %}active lending{% endif %}** agreements!
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Tools I'm Lending (Owner Actions)</h4>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for req in incoming_requests %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ req.tool.name }}</strong>
+                        <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                        <br>
+                        <small class="text-muted">Borrower: {{ req.borrower.username }} ({{ req.start_date }} to {{ req.end_date }})</small>
+                    </div>
+                    <div>
+                        {% if req.status == 'REQUESTED' %}
+                            <a href="{% url 'update_request_status' pk=req.pk new_status='APPROVED' %}" class="btn btn-sm btn-success me-1">Approve</a>
+                            <a href="{% url 'update_request_status' pk=req.pk new_status='REJECTED' %}" class="btn btn-sm btn-danger">Reject</a>
+                        {% elif req.status == 'APPROVED' %}
+                            <a href="{% url 'update_request_status' pk=req.pk new_status='ACTIVE' %}" class="btn btn-sm btn-primary">Start Loan</a>
+                        {% elif req.status == 'RETURNED' %}
+                            <a href="{% url 'update_request_status' pk=req.pk new_status='CLOSED' %}" class="btn btn-sm btn-warning">Confirm Return & Close</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No pending lending activities.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Tools I'm Borrowing (My Requests)</h4>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for req in outgoing_requests %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ req.tool.name }}</strong>
+                        <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                        <br>
+                        <small class="text-muted">Owner: {{ req.tool.owner.username }} ({{ req.start_date }} to {{ req.end_date }})</small>
+                    </div>
+                    <div>
+                        {% if req.status == 'REQUESTED' %}
+                            <a href="{% url 'update_request_status' pk=req.pk new_status='CANCELED' %}" class="btn btn-sm btn-outline-danger">Cancel Request</a>
+                        {% elif req.status == 'ACTIVE' %}
+                            <p class="mb-0 text-success fw-bold">Active Loan!</p>
+                        {% endif %}
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No pending borrowing activities.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mt-4">
+    <div class="card-header bg-light">
+        <h4 class="mb-0">History and Review Opportunities</h4>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for req in history %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ req.tool.name }}</strong>
+                <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                <small class="text-muted d-block">
+                    {% if req.tool.owner == request.user %}
+                        Lent to {{ req.borrower.username }}
+                    {% else %}
+                        Borrowed from {{ req.tool.owner.username }}
+                    {% endif %}
+                </small>
+            </div>
+            <div>
+                {% if req.status == 'CLOSED' %}
+                    {% if req.borrower == request.user %}
+                        <a href="{% url 'create_review' request_pk=req.pk review_type='TOOL' %}" class="btn btn-sm btn-info me-1">Review Tool</a>
+                        <a href="{% url 'create_review' request_pk=req.pk review_type='OWNER' %}" class="btn btn-sm btn-info">Review Owner</a>
+                    {% elif req.tool.owner == request.user %}
+                        <a href="{% url 'create_review' request_pk=req.pk review_type='BORROWER' %}" class="btn btn-sm btn-info">Review Borrower</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock content %}

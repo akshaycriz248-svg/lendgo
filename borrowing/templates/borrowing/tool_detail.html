@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ tool.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        {% if tool.image %}
+            <img src="{{ tool.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ tool.name }}">
+        {% else %}
+            <div class="placeholder-img bg-light p-5 text-center border rounded">
+                <i class="bi bi-tools fs-1 text-muted"></i>
+                <p class="mt-2 text-muted">No Image Available</p>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-7">
+        <h1 class="mb-3">{{ tool.name }}</h1>
+
+        <p class="lead text-primary fw-bold display-6">
+            ${{ tool.daily_fee|floatformat:2 }} / day
+        </p>
+
+        <div class="mb-4">
+            <span class="badge bg-secondary me-2">{{ tool.category.name|default:"Uncategorized" }}</span>
+            <span class="badge bg-info text-dark">{{ tool.condition }}</span>
+            <span class="badge {% if tool.is_available %}bg-success{% else %}bg-danger{% endif %}">
+                {% if tool.is_available %}Available{% else %}Unavailable{% endif %}
+            </span>
+        </div>
+
+        <h3>Description</h3>
+        <p>{{ tool.description|linebreaksbr }}</p>
+
+        <hr>
+
+        <h4>Owner Information</h4>
+        <p>Listed by: <strong>{{ tool.owner.username }}</strong></p>
+        <p>Location: {{ tool.owner.location|default:"Not specified" }}</p>
+
+        {% if request.user.is_authenticated %}
+            {% if request.user == tool.owner %}
+                <div class="mt-4">
+                    <a href="{% url 'tool_update' pk=tool.pk %}" class="btn btn-warning me-2">Edit Tool</a>
+                    <a href="{% url 'tool_delete' pk=tool.pk %}" class="btn btn-danger">Delete Tool</a>
+                </div>
+            {% elif tool.is_available %}
+                <h4 class="mt-4">Request to Borrow</h4>
+                <form method="post" class="card p-3 shadow-sm">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ borrow_form.start_date.label_tag }}
+                            {{ borrow_form.start_date|add_class:"form-control" }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ borrow_form.end_date.label_tag }}
+                            {{ borrow_form.end_date|add_class:"form-control" }}
+                        </div>
+                        {% if borrow_form.non_field_errors %}
+                            <div class="alert alert-danger">{{ borrow_form.non_field_errors }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg mt-3">Submit Borrow Request</button>
+                </form>
+            {% else %}
+                <div class="alert alert-warning mt-4">This tool is currently unavailable for lending.</div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info mt-4">
+                <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">Log in</a> to request this tool.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-5">
+    <h2>Tool Reviews</h2>
+    <p class="text-muted">Display reviews for this tool here (Logic pending, but model is ready).</p>
+</div>
+{% endblock content %}

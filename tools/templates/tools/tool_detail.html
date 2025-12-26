@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tool.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1 class="display-4">{{ tool.name }}</h1>
+        <p class="lead text-success fw-bold">₹{{ tool.daily_fee|floatformat:2 }} / day</p>
+        <p class="text-muted">Category: {{ tool.category.name }}</p>
+
+        {% if tool.image %}
+            <img src="{{ tool.image.url }}" class="img-fluid rounded mb-4" alt="{{ tool.name }}">
+        {% endif %}
+
+        <h2>Description</h2>
+        <p>{{ tool.description }}</p>
+        <p>Condition: <strong>{{ tool.condition }}</strong></p>
+
+        {% if request.user == tool.owner %}
+            <hr>
+            <a href="{% url 'tools:tool_form' pk=tool.pk %}" class="btn btn-warning me-2">Edit Listing</a>
+            <a href="{% url 'tools:tool_confirm_delete' pk=tool.pk %}" class="btn btn-danger">Delete Listing</a>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-info mt-4 mt-md-0">
+            <div class="card-body">
+                <h4 class="card-title text-info"><i class="bi bi-person-circle me-2"></i>Contact Owner</h4>
+
+                {% if request.user.is_authenticated and request.user != tool.owner %}
+                    <p class="mb-2">Owner: <strong>{{ tool.owner.first_name|default:"LendGo User" }}</strong></p>
+
+                    {# Added phone number display if available #}
+                    {% if tool.phone %}
+                        <p class="mb-2">
+                            Phone:
+                            <a href="tel:{{ tool.phone }}">{{ tool.phone }}</a>
+                        </p>
+                    {% endif %}
+
+                    {# Added district display if available #}
+                    {% if tool.district %}
+                        <p class="mb-2">
+                            Location:
+                            <strong>{{ tool.district }}</strong>
+                        </p>
+                    {% endif %}
+
+                    <p class="mb-3">
+                        Email:
+                        <a href="mailto:{{ tool.owner.email }}">{{ tool.owner.email }}</a>
+                    </p>
+
+                    <a href="mailto:{{ tool.owner.email }}" class="btn btn-info w-100">
+                        <i class="bi bi-envelope-fill me-1"></i> Request This Tool
+                    </a>
+                {% elif request.user == tool.owner %}
+                    <p class="text-muted">This is your listing.</p>
+                {% else %}
+                    <p class="text-danger">You must be logged in to contact the tool owner.</p>
+                    <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn-outline-info w-100">
+                        Login to Contact
+                    </a>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <a href="{% url 'tools:tool_list' %}" class="btn btn-outline-secondary mt-3 w-100">Back to List</a>
+    </div>
+</div>
+{% endblock content %}
