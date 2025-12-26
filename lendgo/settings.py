@@ -111,6 +111,8 @@ STATIC_URL = '/static/'
 
 # List of directories where Django should additionally look for static files
 # (i.e., your project-wide static files, like a vendor JS library or global CSS).
+ALLOWED_HOSTS = ['*']
+
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
