@@ -17,7 +17,13 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='fallback-secret-key-for-dev')
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = [
+    "lendgo.onrender.com",
+    "127.0.0.1",
+    "localhost",
+]
+
+
 
 # REQUIRED FOR RENDER (CSRF FIX)
 CSRF_TRUSTED_ORIGINS = [
